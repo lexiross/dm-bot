@@ -5,7 +5,7 @@ const token = process.env.SLACK_TOKEN;
 const BOT_USER_ID = "U47MBDHLL";
 
 function isDMMessage (message) {
-  return /\bdm/i.test(message) && /<@U[0-9A-Z]+>/.test(message);
+  return /\bdm/i.test(message) && /<@U[0-9A-Z]+>/.test(message) && message.length < 30;
 }
 
 function findRecipient (message) {
