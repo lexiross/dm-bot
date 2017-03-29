@@ -32,6 +32,7 @@ function sendMessage (channel, text) {
   });
 }
 
+// Sent a public @mention dm'd
 bot.message(function({user, channel, text}) {
   delete typingStartTimes[userChannelKey(user, channel)];
   if (isDMMessage(text) && user !== BOT_USER_ID) {
@@ -39,7 +40,7 @@ bot.message(function({user, channel, text}) {
   }
 });
 
-// Log "is typing a lot"
+// Typing for a long time
 const typingStartTimes = {};
 bot.user_typing(function({user, channel, text}) {
   const key = userChannelKey(user, channel);
@@ -55,5 +56,23 @@ bot.user_typing(function({user, channel, text}) {
     sendMessage(channel, `${atMention(user)} is sure typing a lot! :grinning:`)
   }
 });
+
+// Sending many sequential messages
+const lastMessageBy = {};
+const lastMessages = {};
+bot.message(function({user, channel, text}) {
+  if (lastMessageBy[channel] !== user) {
+    lastMessageBy[channel] = user;
+    lastMessages[channel] = [{text, time: Date.now()}];
+  } else {
+    const recent = lastMessages[channel] = lastMessages[channel].concat({text, time: Date.now()}).slice(-5);
+    if (recent.length >= 5 && recent[4].time - recent[0].time <= 10000) {
+      const combinedMessage = recent.map(({text}) => text).join(" ");
+      sendMessage(channel, `${atMention(user)} - wow! That's sure a lot of messages! Perhaps you meant '${combinedMessage}'? :grinning:`);
+      lastMessages[channel] = [];
+    }
+  }
+});
+
 
 bot.listen({token});
